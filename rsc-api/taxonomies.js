@@ -63,8 +63,8 @@ module.exports = async function handler(req, res) {
     if (taxErr) return res.status(500).json({ error: taxErr.message });
 
     const difficulties = (taxRows || []).filter((t) => t.type === "difficulty");
-    const topics = (taxRows || []).filter((t) => t.type === "topic");
-    const channels = (taxRows || []).filter((t) => t.type === "channel");
+    const topics = (taxRows || []).filter((t) => t.type === "topic" || t.type === "genre" || t.type === "duration");
+    const channels = (taxRows || []).filter((t) => t.type === "channel" || t.type === "show");
 
     let q = supabaseAdmin
       .from("clips_view")
