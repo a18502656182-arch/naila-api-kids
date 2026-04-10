@@ -61,6 +61,18 @@ module.exports = async function handler(req, res) {
     const max = Number(rc.max_uses || 0);
     if (max > 0 && used >= max) return res.status(400).json({ error: "code_used_up" });
 
+    // 试用卡限制：每个用户只能使用一次
+    if (rc.plan === "trial") {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("used_trial")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (profile?.used_trial) {
+        return res.status(400).json({ error: "trial_already_used" });
+      }
+    }
+
     const { data: existingSub } = await admin
       .from("subscriptions")
       .select("expires_at, status")
@@ -81,10 +93,10 @@ module.exports = async function handler(req, res) {
     await admin.from("redeem_codes").update({ used_count: used + 1 }).eq("code", code);
 
     // 记录用户使用了哪个兑换码（用于订单管理追踪）
-    await admin.from("profiles").upsert(
-      { user_id: user.id, used_code: code },
-      { onConflict: "user_id" }
-    );
+    const profileUpdate = { user_id: user.id, used_code: code };
+    // 试用卡：标记已使用，防止重复领取
+    if (rc.plan === "trial") profileUpdate.used_trial = true;
+    await admin.from("profiles").upsert(profileUpdate, { onConflict: "user_id" });
 
     return res.status(200).json({ ok: true, plan: rc.plan || "month", expires_at: new_expires_at });
   } catch (e) {
