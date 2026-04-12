@@ -13,7 +13,7 @@ const API_BASE_URL = process.env.API_BASE_URL || "https://naila-api-meiju-produc
 // 套餐配置
 const PLANS = {
   month:    { label: "月卡会员",  days: 30,  amount: "13.80" },
-  quarter:  { label: "季卡会员",  days: 90,  amount: "23.80" },
+  quarter:  { label: "季卡会员",  days: 90,  amount: "29.80" },
   year:     { label: "年卡会员",  days: 365, amount: "66.80" },
   lifetime: { label: "永久会员",  days: 0,   amount: "168.80" },
 };
