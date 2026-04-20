@@ -5,10 +5,7 @@ const app = express();
 app.use(express.json({ limit: "20mb" }));
 
 const ALLOW_ORIGINS = [
-  "https://www.nailaobao.top",
-  "https://nailaobao.top",
-  "https://www.dian-eng.top",
-  "https://dian-eng.top",
+  "https://naila-clips-kids-x6sm.vercel.app",
 ];
 
 app.use(
@@ -26,7 +23,7 @@ app.use(
 );
 
 app.options("*", (req, res) => res.sendStatus(204));
-app.get("/", (req, res) => res.send("naila-api ok"));
+app.get("/", (req, res) => res.send("naila-api-kids ok"));
 
 function mountApi(name) {
   app.all(`/api/${name}`, async (req, res) => {
