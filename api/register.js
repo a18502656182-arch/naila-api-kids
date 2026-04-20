@@ -52,7 +52,7 @@ module.exports = async function handler(req, res) {
       .eq("code", trimmedCode)
       .maybeSingle();
 
-    if (rcErr) return res.status(500).json({ error: "db_read_failed" });
+    if (rcErr) { console.error("db_read_failed:", JSON.stringify(rcErr)); return res.status(500).json({ error: "db_read_failed", detail: rcErr.message }); }
     if (!rc || !rc.is_active) return res.status(400).json({ error: "invalid_code" });
     if (rc.expires_at && new Date(rc.expires_at).getTime() < Date.now()) {
       return res.status(400).json({ error: "code_expired" });
