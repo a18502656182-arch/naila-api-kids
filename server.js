@@ -5,7 +5,10 @@ const app = express();
 app.use(express.json({ limit: "20mb" }));
 
 const ALLOW_ORIGINS = [
-  "https://naila-clips-kids-x6sm.vercel.app",
+  "https://www.nailaobao.top",
+  "https://nailaobao.top",
+  "https://www.dian-eng.top",
+  "https://dian-eng.top",
 ];
 
 app.use(
@@ -23,7 +26,7 @@ app.use(
 );
 
 app.options("*", (req, res) => res.sendStatus(204));
-app.get("/", (req, res) => res.send("naila-api-kids ok"));
+app.get("/", (req, res) => res.send("naila-api ok"));
 
 function mountApi(name) {
   app.all(`/api/${name}`, async (req, res) => {
@@ -85,6 +88,9 @@ mountApi("pay_create");
 mountApi("pay_notify");
 mountApi("pay_query");
 mountApi("site_config");
+mountApi("star_log");
+mountApi("star_total");
+mountApi("reading_score_save");
 
 mountRsc("/rsc-api/clips", "./rsc-api/clips.js");
 mountRsc("/rsc-api/taxonomies", "./rsc-api/taxonomies.js");
