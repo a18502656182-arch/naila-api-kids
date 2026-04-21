@@ -2,6 +2,7 @@
 const { createClient } = require("@supabase/supabase-js");
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 function getBearer(req) {
@@ -21,17 +22,22 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "missing_updates" });
 
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      auth: { persistSession: false },
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
+    // 先验证用户身份
+    const anon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    const { data } = await anon.auth.getUser(token);
+    const user = data?.user || null;
+    if (!user) return res.status(401).json({ error: "invalid_token" });
+
+    // 用 service role 执行更新，同时验证 user_id 确保只能改自己的数据
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
     for (const { id, mastery_level } of updates) {
       const level = Math.max(0, Math.min(2, parseInt(mastery_level, 10)));
-      const { error } = await supabase
+      const { error } = await admin
         .from("vocab_favorites")
         .update({ mastery_level: level })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("user_id", user.id); // 确保只能改自己的词
       if (error) throw error;
     }
     return res.status(200).json({ ok: true });
