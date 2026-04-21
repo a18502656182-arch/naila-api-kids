@@ -90,9 +90,6 @@ mountApi("pay_query");
 mountApi("site_config");
 mountApi("star_log");
 mountApi("star_total");
-mountApi("reading_score_save");
-mountApi("seg_reaction_save");
-mountApi("seg_reaction_list");
 
 mountRsc("/rsc-api/clips", "./rsc-api/clips.js");
 mountRsc("/rsc-api/taxonomies", "./rsc-api/taxonomies.js");
