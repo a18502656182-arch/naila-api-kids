@@ -91,6 +91,7 @@ module.exports = async function handler(req, res) {
       ws.on("message", (data) => {
         try {
           const msg = JSON.parse(data.toString());
+          console.log("[asr] xunfei msg:", JSON.stringify(msg));
           if (msg.code !== 0) {
             ws.close();
             clearTimeout(timer);
