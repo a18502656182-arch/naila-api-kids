@@ -42,16 +42,19 @@ module.exports = async function handler(req, res) {
 
     // watch_clip：同一个视频今天只记一次
     if (action === "watch_clip" && clip_id) {
-      const { data: existing } = await admin
+      const start = todayUTCStart();
+      const { data: rows, error: checkErr } = await admin
         .from("star_logs")
         .select("id")
         .eq("user_id", user.id)
         .eq("action", "watch_clip")
         .eq("clip_id", Number(clip_id))
-        .gte("created_at", todayUTCStart())
-        .maybeSingle();
+        .gte("created_at", start)
+        .limit(1);
 
-      if (existing) {
+      console.log("[star_log] dedup check:", { start, rows, checkErr });
+
+      if (rows && rows.length > 0) {
         return res.status(200).json({ ok: true, stars_earned: 0, reason: "already_logged_today" });
       }
     }
