@@ -54,7 +54,7 @@ module.exports = async function handler(req, res) {
           stars: 1,
           clip_id: Number(clip_id),
         });
-      } catch {}
+      } catch (e) {}
 
     return res.status(200).json({ ok: true, stars_earned: isNew ? 1 : 0 });
   } catch (e) {
