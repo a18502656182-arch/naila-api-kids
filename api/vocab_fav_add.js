@@ -27,12 +27,35 @@ module.exports = async function handler(req, res) {
     if (!term || !clip_id) return res.status(400).json({ error: "missing_term_or_clip_id" });
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+
+    // 先检查是否已收藏（避免重复得星）
+    const { data: existing } = await admin
+      .from("vocab_favorites")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("term", String(term).trim())
+      .eq("clip_id", Number(clip_id))
+      .maybeSingle();
+
+    const isNew = !existing;
+
     const { error } = await admin.from("vocab_favorites").upsert(
       { user_id: user.id, term: String(term).trim(), clip_id: Number(clip_id), kind: kind || "words", data: vocabData || null },
       { onConflict: "user_id,term,clip_id" }
     );
     if (error) return res.status(500).json({ error: "insert_failed", detail: error.message });
-    return res.status(200).json({ ok: true });
+
+    // 新词才记星星
+    if (isNew) {
+      await admin.from("star_logs").insert({
+        user_id: user.id,
+        action: "vocab_collect",
+        stars: 1,
+        clip_id: Number(clip_id),
+      }).catch(() => {});
+    }
+
+    return res.status(200).json({ ok: true, stars_earned: isNew ? 1 : 0 });
   } catch (e) {
     return res.status(500).json({ error: "server_error", detail: String(e?.message || e) });
   }
