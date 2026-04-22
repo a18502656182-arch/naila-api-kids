@@ -54,7 +54,10 @@ module.exports = async function handler(req, res) {
           stars: 1,
           clip_id: Number(clip_id),
         });
-      } catch (e) {}
+      } catch (e) {
+        // 记星星失败不影响收藏结果
+      }
+    }
 
     return res.status(200).json({ ok: true, stars_earned: isNew ? 1 : 0 });
   } catch (e) {
