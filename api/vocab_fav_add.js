@@ -47,13 +47,14 @@ module.exports = async function handler(req, res) {
 
     // 新词才记星星
     if (isNew) {
-      await admin.from("star_logs").insert({
-        user_id: user.id,
-        action: "vocab_collect",
-        stars: 1,
-        clip_id: Number(clip_id),
-      }).catch(() => {});
-    }
+      try {
+        await admin.from("star_logs").insert({
+          user_id: user.id,
+          action: "vocab_collect",
+          stars: 1,
+          clip_id: Number(clip_id),
+        });
+      } catch {}
 
     return res.status(200).json({ ok: true, stars_earned: isNew ? 1 : 0 });
   } catch (e) {
