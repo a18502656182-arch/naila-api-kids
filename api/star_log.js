@@ -5,17 +5,20 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABAS
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const VALID_ACTIONS = ["watch_clip", "reading_score", "vocab_collect"];
-const STARS_MAP = {
-  watch_clip: 1,
-  reading_score: 1,
-  vocab_collect: 1,
-};
+const VALID_ACTIONS = ["watch_clip", "vocab_collect"];
+const STARS_MAP = { watch_clip: 1, vocab_collect: 1 };
 
 function getBearer(req) {
   const h = req.headers.authorization || "";
   const m = h.match(/^Bearer\s+(.+)$/i);
   return m ? m[1].trim() : null;
+}
+
+function todayUTCStart() {
+  const now = new Date();
+  const bjNow = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  const bjToday = new Date(Date.UTC(bjNow.getUTCFullYear(), bjNow.getUTCMonth(), bjNow.getUTCDate()));
+  return new Date(bjToday.getTime() - 8 * 60 * 60 * 1000).toISOString();
 }
 
 module.exports = async function handler(req, res) {
@@ -36,6 +39,22 @@ module.exports = async function handler(req, res) {
     if (!user) return res.status(200).json({ ok: false, reason: "invalid_token" });
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+
+    // watch_clip：同一个视频今天只记一次
+    if (action === "watch_clip" && clip_id) {
+      const { data: existing } = await admin
+        .from("star_logs")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("action", "watch_clip")
+        .eq("clip_id", Number(clip_id))
+        .gte("created_at", todayUTCStart())
+        .maybeSingle();
+
+      if (existing) {
+        return res.status(200).json({ ok: true, stars_earned: 0, reason: "already_logged_today" });
+      }
+    }
 
     const stars = STARS_MAP[action] || 1;
     const { error } = await admin.from("star_logs").insert({
